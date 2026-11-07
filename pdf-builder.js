@@ -50,9 +50,16 @@ window.buildChecklistPdf = function (record) {
     ? ["Servicio de Transporte de Personal", "Alquiler de Vehículos, Servicios de mantenimiento, Reparación y venta de repuestos y accesorios en el rubro Automotriz y Maquinaria Pesada"]
     : ["Centro De Diagnóstico Y Reparación Automotriz", "Laboratorio Common Rail | Alquiler De Vehículos"];
 
-  const aliases = { moto:"veh_moto", motocarguero:"veh_motocarguero", cuatrimoto:"veh_cuatrimoto", camioneta:"veh_camioneta", combi:"veh_combi", minivan:"veh_minivan", suv:"veh_suv", auto:"veh_auto", sprinter:"veh_ambulancia_sprinter", ambulancia_combi:"veh_ambulancia_combi", ambulancia:"veh_ambulancia_camioneta" };
-  const vehicleText = String(record.vehicleType || raw["T. UNIDAD"] || raw.MODELO || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const alias = Object.keys(aliases).sort((a,b) => b.length-a.length).find(v => vehicleText.includes(v));
+  const aliases = { motolineal:"veh_moto", moto:"veh_moto", motocarguero:"veh_motocarguero", cuatrimoto:"veh_cuatrimoto", camioneta:"veh_camioneta", combi:"veh_combi", minivan:"veh_minivan", suv:"veh_suv", auto:"veh_auto", ambulanciasprinter:"veh_ambulancia_sprinter", ambulanciacombi:"veh_ambulancia_combi", ambulanciacamioneta:"veh_ambulancia_camioneta", ambulancia:"veh_ambulancia_camioneta" };
+  const normalizeVehicleText = value => String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+  const vehicleText = normalizeVehicleText(record.vehicleType || raw["T. UNIDAD"] || raw.MODELO || "");
+  const alias = Object.keys(aliases)
+    .sort((a, b) => normalizeVehicleText(b).length - normalizeVehicleText(a).length)
+    .find(v => vehicleText.includes(normalizeVehicleText(v)));
   const folder = alias ? aliases[alias] : "veh_auto";
   const silhouette = `/assets/vehicles/${folder}/${folder}.png`;
   const parseJsonArray = value => {
