@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "acta-e"
+  },
+  "targets": {
+    "acta-e": {
+      "hosting": {
+        "hiverxa-central": [
+          "hiverxa-central"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

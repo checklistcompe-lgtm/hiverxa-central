@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reportes | Central de documentos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <header class="topbar">
+      <div class="topbar-brand"><span class="brand-mark">R</span><div><p class="eyebrow">CENTRAL DE DOCUMENTOS</p><h1 id="pageTitle">Checklists</h1></div></div>
+      <nav class="top-nav">
+        <button class="nav-item active" data-view="checklists">Checklists</button>
+        <button class="nav-item" data-view="actas">Actas de entrega</button>
+      </nav>
+      <div class="topbar-actions"><div class="user-chip">Administrador</div></div>
+    </header>
+
+    <section class="toolbar">
+      <label class="search-wrap">
+        <span>Buscar</span>
+        <input id="searchInput" type="search" placeholder="Equipo, cliente, número o responsable">
+      </label>
+      <label>
+        <span>Tipo</span>
+        <select id="typeFilter">
+          <option value="checklist">Checklist</option>
+          <option value="acta">Acta de entrega</option>
+          <option value="">Todos</option>
+        </select>
+      </label>
+      <label>
+        <span>Estado</span>
+        <select id="statusFilter">
+          <option value="">Todos</option>
+          <option value="Completo">Completo</option>
+          <option value="Pendiente">Pendiente</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="content-card">
+      <div class="card-heading">
+        <div><h2>Documentos recientes</h2><p>Selecciona un registro para editarlo o generar su PDF.</p></div>
+        <button id="refreshButton" class="secondary-button">Actualizar datos</button>
+      </div>
+      <div id="tableHorizontalScroll" class="table-horizontal-scroll" aria-label="Desplazamiento horizontal"><div id="tableScrollThumb"></div></div>
+      <div id="tableWrap" class="table-wrap">
+        <table>
+          <thead id="recordsHead"><tr><th>Documento</th><th>Fecha</th><th>Placa</th><th>Marca</th><th>Modelo</th><th>Año</th><th>Color</th><th>KM</th><th>Cliente</th><th>Usuario</th><th>DNI</th><th>Observaciones</th><th></th></tr></thead>
+          <tbody id="recordsBody"></tbody>
+        </table>
+      </div>
+      <div id="emptyState" class="empty-state" hidden>No se encontraron registros.</div>
+    </section>
+  </main>
+
+  <dialog id="editorDialog" class="editor-dialog">
+    <form method="dialog" id="editorForm">
+      <header class="dialog-header">
+        <div><p class="eyebrow" id="dialogType"></p><h2 id="dialogTitle"></h2></div>
+        <button class="icon-button" value="cancel" aria-label="Cerrar">×</button>
+      </header>
+      <div id="editorFields" class="editor-fields"></div>
+      <footer class="dialog-actions">
+        <button class="secondary-button" value="cancel">Cancelar</button>
+        <button id="saveButton" class="primary-button" value="default">Guardar cambios</button>
+        <button id="pdfButton" class="pdf-button" type="button">Vista previa / PDF</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="pdfPreviewDialog" class="pdf-preview-dialog" aria-label="Vista previa del checklist">
+    <iframe id="pdfPreviewFrame" title="Vista previa del checklist"></iframe>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="pdf-builder.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
