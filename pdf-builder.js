@@ -22,7 +22,8 @@ window.buildChecklistPdf = function (record) {
   const inventoryTable = rows => rows.map(row => {
     if (row.isCategory) {
       const isDocuments = row.category === "DOCUMENTOS DEL VEHÍCULO";
-      return `<tr class="category"><td>${esc(row.name)}</td><td>${isDocuments ? "SÍ" : "B"}</td><td>${isDocuments ? "NO" : "R"}</td><td>${isDocuments ? "" : "M"}</td></tr>`;
+      const isEquipment = row.category === "HERRAMIENTAS / EQUIPO";
+      return `<tr class="category"><td>${esc(row.name)}</td><td>${isDocuments || isEquipment ? "SÍ" : "B"}</td><td>${isDocuments || isEquipment ? "NO" : "R"}</td><td>${isDocuments || isEquipment ? "" : "M"}</td></tr>`;
     }
     const normalizeInventoryKey = value => String(value || "")
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -33,7 +34,7 @@ window.buildChecklistPdf = function (record) {
     const isDocuments = row.category === "DOCUMENTOS DEL VEHÍCULO";
     const isEquipment = row.category === "HERRAMIENTAS / EQUIPO";
     if (isDocuments) return `<tr><td>${esc(row.name)}</td><td>${normalized === "si" || normalized === "bueno" ? "X" : ""}</td><td>${normalized === "no" || normalized === "malo" ? "X" : ""}</td><td></td></tr>`;
-    if (isEquipment) return `<tr><td>${esc(row.name)}</td><td>${normalized === "si" || normalized === "b" || normalized === "bueno" ? "X" : ""}</td><td></td><td>${normalized === "no" || normalized === "m" || normalized === "malo" ? "X" : ""}</td></tr>`;
+    if (isEquipment) return `<tr><td>${esc(row.name)}</td><td>${normalized === "si" || normalized === "b" || normalized === "bueno" ? "X" : ""}</td><td>${normalized === "no" || normalized === "m" || normalized === "malo" ? "X" : ""}</td><td></td></tr>`;
     return `<tr><td>${esc(row.name)}</td><td>${normalized === "b" || normalized === "bueno" ? "X" : ""}</td><td>${normalized === "r" || normalized === "regular" ? "X" : ""}</td><td>${normalized === "m" || normalized === "malo" ? "X" : ""}</td></tr>`;
   }).join("");
 
