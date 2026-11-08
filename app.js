@@ -77,7 +77,15 @@ async function loadSolpedRecords(checklists = []) {
       raw: row,
       checklist
     };
-  }).sort((a, b) => String(b.id).localeCompare(String(a.id), "es", { numeric: true }));
+  }).sort((a, b) => {
+    const sequence = value => {
+      const numbers = String(value || "").match(/\d+/g);
+      return numbers ? Number(numbers[numbers.length - 1]) : 0;
+    };
+    const prefixDifference = String(b.id).localeCompare(String(a.id), "es", { numeric: true });
+    if (String(a.id).slice(0, String(a.id).lastIndexOf("-")) !== String(b.id).slice(0, String(b.id).lastIndexOf("-"))) return prefixDifference;
+    return sequence(b.id) - sequence(a.id);
+  });
 }
 
 async function loadChecklistRecords() {
@@ -203,14 +211,14 @@ function render() {
   const actaView = typeFilter.value === "acta";
   const solpedView = typeFilter.value === "solped";
   document.getElementById("recordsHead").innerHTML = solpedView
-    ? "<tr><th>N° SOLPED</th><th>Correlativo checklist</th><th>Emisión</th><th>Actualización</th><th>Cliente</th><th>Placa</th><th>Marca</th><th>Modelo</th><th></th></tr>"
+    ? "<tr><th>N° Correlativo</th><th>Fecha de emisión</th><th>Actualización</th><th>Cliente</th><th>Placa</th><th>Marca</th><th>Modelo</th><th></th></tr>"
     : actaView
       ? "<tr><th>Placa / Código</th><th>Fecha</th><th>Tipo de vehículo</th><th>Marca</th><th>Modelo</th><th>Propietario / Cliente</th><th>Tipo de mantenimiento</th><th>Usuario</th><th>DNI</th><th></th></tr>"
       : '<tr><th>Documento</th><th>Fecha</th><th>Placa</th><th>Marca</th><th>Modelo</th><th>Año</th><th>Color</th><th>KM</th><th>Cliente</th><th>Usuario</th><th>DNI</th><th>Observaciones</th><th></th></tr>'; 
   recordsBody.innerHTML = visible.map(record => solpedView ? `
     <tr>
       <td class="document-cell"><strong>${escapeTableValue(record.id)}</strong></td>
-      <td>${escapeTableValue(record.id)}</td><td>${escapeTableValue(record.issueDate)}</td><td>${escapeTableValue(record.updateDate)}</td>
+      <td>${escapeTableValue(record.issueDate)}</td><td>${escapeTableValue(record.updateDate)}</td>
       <td>${escapeTableValue(record.client)}</td><td>${escapeTableValue(record.plate)}</td><td>${escapeTableValue(record.brand)}</td><td>${escapeTableValue(record.model)}</td>
       <td><button class="action-button pdf-action" data-pdf="${escapeTableValue(record.id)}">Vista previa / PDF</button></td>
     </tr>` : actaView ? `
