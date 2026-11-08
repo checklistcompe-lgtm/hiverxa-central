@@ -43,12 +43,8 @@ window.buildChecklistPdf = function (record) {
     return `<div class="fluid"><div class="scale">${scale}</div><div class="gauge"><i style="height:${value * 100}%;background:${color}"></i></div><div class="fluid-name">${words.map(w => esc(w)).join("<br>")}</div></div>`;
   }).join("");
 
-  const companyRuc20 = String(raw.RUC_EMPRESA || raw.RUC || "20605496777").replace(/[^0-9]/g, "") === "20605496777";
-  const companyName = companyRuc20 ? "GRUPO HIVERXA S.A.C." : "HIDALGO HUAMANÍ LUIS ALBERTO";
-  const companyRuc = companyRuc20 ? "RUC: 20605496777" : "RUC: 10404845263";
-  const companyActivity = companyRuc20
-    ? ["Servicio de Transporte de Personal", "Alquiler de Vehículos, Servicios de mantenimiento, Reparación y venta de repuestos y accesorios en el rubro Automotriz y Maquinaria Pesada"]
-    : ["Centro De Diagnóstico Y Reparación Automotriz", "Laboratorio Common Rail | Alquiler De Vehículos"];
+  const storedRuc = String(raw.RUC_EMPRESA || raw.RUC || "20605407077").replace(/[^0-9]/g, "");
+  const defaultCompanyRuc = storedRuc === "10404845263" ? "10404845263" : "20605407077";
 
   const aliases = { motolineal:"veh_moto", moto:"veh_moto", motocarguero:"veh_motocarguero", cuatrimoto:"veh_cuatrimoto", camioneta:"veh_camioneta", combi:"veh_combi", minivan:"veh_minivan", suv:"veh_suv", auto:"veh_auto", ambulanciasprinter:"veh_ambulancia_sprinter", ambulanciacombi:"veh_ambulancia_combi", ambulanciacamioneta:"veh_ambulancia_camioneta", ambulancia:"veh_ambulancia_camioneta" };
   const normalizeVehicleText = value => String(value || "")
@@ -154,8 +150,8 @@ window.buildChecklistPdf = function (record) {
 .fluids-panel{position:absolute;left:35pt;top:494pt;width:257.5pt;padding-bottom:3pt}.sub-title{height:14pt;margin:0 -1pt 3pt;background:#F0F4F8;border:0;padding:2pt 5pt;font-size:8pt;font-weight:bold;line-height:9pt;color:#00041A}.fluids{height:92pt;border-top:0;width:257.5pt;display:flex;padding-top:5pt}.fluid{position:relative;width:42pt;height:82pt}.scale{position:absolute;left:-2pt;top:0;width:16pt;height:65pt;font-size:4.5pt;text-align:right}.scale i{position:absolute;right:0;font-style:normal;white-space:nowrap;line-height:5pt}.scale-max{top:-1pt}.scale-q3{top:15pt}.scale-mid{top:30pt}.scale-q1{top:45pt}.scale-min{bottom:-1pt}.gauge{position:absolute;left:16pt;top:0;width:16pt;height:65pt;border:.8pt solid #455A64;border-radius:3pt;overflow:hidden;background:#fff}.gauge i{position:absolute;left:0;bottom:0;width:100%}.fluid-name{position:absolute;left:2pt;top:68pt;width:38pt;text-align:center;font-size:5.5pt;line-height:6.5pt;font-weight:bold}
 .damage-panel{position:absolute;left:310pt;top:494pt;width:250pt}.damage-box{position:relative;width:250pt;height:135pt;border:.5pt solid #B0BEC5;display:flex;align-items:center;justify-content:center;overflow:hidden}.damage-box img{width:246pt;height:131pt;object-fit:contain}.damage-overlay{position:absolute;left:2pt;top:2pt;width:246pt;height:131pt;pointer-events:none;z-index:5;overflow:visible}
 .bottom{position:absolute;left:35pt;top:656pt;width:525pt;height:95pt;display:grid;grid-template-columns:260pt 253pt;gap:12pt}.bottom>div{border:0;min-height:95pt}.bottom .sub-title{margin:0}.observations,.authorizations{padding:5pt 6pt}.bottom .sub-title{padding-bottom:2pt}.observations{font-size:7pt;line-height:8pt;height:78pt;overflow:hidden}.authorizations{font-size:5.9pt;line-height:7.8pt}.auth-item{display:flex;align-items:flex-start;gap:3pt;margin-bottom:2pt}.auth-box{display:inline-block;flex:none;width:6pt;height:6pt;border:.8pt solid #00041A;background:#fff;line-height:5pt;text-align:center;font-size:5pt;font-weight:bold}.signature{position:absolute;left:370pt;top:722pt;width:160pt;height:62pt;text-align:center;color:#00041A}.signature img{position:absolute;left:25pt;top:0;width:110pt;height:60pt;object-fit:contain}.signature-line{position:absolute;left:0;top:62pt;border-top:1.1pt solid #00041A;width:160pt}.signature-label{position:absolute;left:0;top:66pt;width:160pt;font-weight:bold;font-size:7.8pt;line-height:8pt}.signature-name{position:absolute;left:0;top:75pt;width:160pt;font-size:5.8pt;line-height:6.5pt;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.legal{position:absolute;left:-5pt;top:92pt;width:170pt;text-align:center;color:#666;font-size:5.8pt;font-style:italic;line-height:6.2pt}.footer{position:absolute;left:35pt;bottom:8pt;width:330pt;font-size:5.5pt;color:#777}
-</style></head><body><div class="preview-toolbar"><button type="button" class="print-action" onclick="window.print()">Imprimir / Guardar PDF</button><button type="button" class="close-action" onclick="parent.document.getElementById('pdfPreviewDialog').close()">Cerrar</button></div><div class="page">
-<div class="brand"><div class="brand-name">${esc(companyName)}</div><div class="brand-ruc">${esc(companyRuc)}</div><div class="brand-line">${esc(companyActivity[0])}</div><div class="brand-extra">${esc(companyActivity[1])}</div><div class="brand-extra">Jr. Tupac Amaru Mz. W1 Lt. 21B | Caraz - Áncash - Perú</div><div class="brand-extra">Web: hiverxamotors.com | Email: luis.hidalgo@hiverxamotors.com</div><div class="brand-extra">Cel: 999 623 122 | 043-707036</div></div>
+</style></head><body><div class="preview-toolbar"><label style="display:flex;align-items:center;gap:6px;background:#fff;border-radius:6px;padding:0 8px;font-size:12px;font-weight:bold">Razón social<select id="company-ruc" onchange="setChecklistCompany(this.value)"><option value="20605407077">RUC 20 · GRUPO HIVERXA S.A.C.</option><option value="10404845263">RUC 10 · HIDALGO HUAMANÍ LUIS ALBERTO</option></select></label><button type="button" class="print-action" onclick="window.print()">Imprimir / Guardar PDF</button><button type="button" class="close-action" onclick="parent.document.getElementById('pdfPreviewDialog').close()">Cerrar</button></div><div class="page">
+<div class="brand"><div class="brand-name" id="company-name"></div><div class="brand-ruc" id="company-ruc-label"></div><div class="brand-line" id="company-activity-1"></div><div class="brand-extra" id="company-activity-2"></div><div class="brand-extra">Jr. Tupac Amaru Mz. W1 Lt. 21B | Caraz - Áncash - Perú</div><div class="brand-extra">Web: hiverxamotors.com | Email: luis.hidalgo@hiverxamotors.com</div><div class="brand-extra">Cel: 999 623 122 | 043-707036</div></div>
 <div class="doc-box"><div class="doc-title">CHECKLIST VEHICULAR</div><div class="doc-number">N° ${esc(record.id)}</div></div><div class="doc-meta">Fecha y Hora: ${esc(raw.FECHA || record.date)} | ${esc(raw.HORA || "")}<br>Técnico: ${esc(record.responsible)}</div>
 <div class="section-title client-section">I. DATOS DEL CLIENTE</div><div class="data-box client-box"><div class="client-grid"><b>CLIENTE:</b><span>${esc(record.client)}</span><b>DNI/RUC:</b><span>${esc(raw["DNI/RUC"] || raw.DNI || raw.RUC)}</span><b>DIRECCIÓN:</b><span>${esc(raw.DIRECCIÓN || raw.DIRECCION || "")}</span></div></div>
 <div class="section-title vehicle-section">II. DATOS DEL VEHÍCULO</div><div class="data-box vehicle-box"><div class="vehicle-grid"><div><b>PLACA:</b> ${esc(raw.PLACA || record.plate)}</div><div><b>AÑO:</b> ${esc(raw.AÑO)}</div><div><b>MOTOR:</b> ${esc(raw.MOTOR)}</div><div><b>SOAT:</b> ${esc(raw.SOAT)}</div><div><b>MARCA:</b> ${esc(raw.MARCA)}</div><div><b>COLOR:</b> ${esc(raw.COLOR)}</div><div><b>VIN:</b> ${esc(raw.VIN)}</div><div><b>RT:</b> ${esc(raw["REV TEC"] || raw.RT)}</div><div><b>MODELO:</b> ${esc(raw.MODELO)}</div><div><b>KM:</b> ${esc(raw.KM)}</div><div><b>SERIE:</b> ${esc(raw.SERIE)}</div><div><b>TIPO:</b> ${esc(raw["T. UNIDAD"] || "")}</div></div></div>
@@ -164,7 +160,29 @@ window.buildChecklistPdf = function (record) {
 <div class="bottom"><div><div class="sub-title">V. OBSERVACIONES</div><div class="observations">${esc(record.observations || raw.OBSERVACIONES || "")}</div></div><div><div class="sub-title">VI. AUTORIZACIONES</div><div class="authorizations"><div class="auth-item">${authorization(raw.A1)}<span>Autorizo conducir mi vehículo para pruebas en exteriores del taller.</span></div><div class="auth-item">${authorization(raw.A2)}<span>Autorizo enviar mi vehículo para trabajos en talleres de su elección.</span></div><div class="auth-item">${authorization(raw.A3)}<span>Declaro que no he dejado objetos ni dinero dentro del vehículo que pueda registrarse como pérdida.</span></div><div class="auth-item">${authorization(raw.A4)}<span>Acepto retirar mi vehículo en un máximo de ${esc(storageDays)} días después de finalizado el servicio; caso contrario asumiré un costo de S/ ${esc(storageCost)} diario por concepto de cochera (interna y/o externa).</span></div></div></div></div>
 <div class="signature">${signature ? `<img src="${signature}" alt="Firma">` : ""}<div class="signature-line"></div><div class="signature-label">FIRMA DEL CLIENTE</div><div class="signature-name"><b>${esc(record.signerName || record.client)}</b> &nbsp; DNI: ${esc(record.signerDni || raw["DNI/RUC"] || "")}</div><div class="legal">Declaro haber dejado mi vehículo según checklist, aceptando y autorizando lo detallado.</div></div><div class="footer">© ${new Date().getFullYear()} Hiverxa Motor's - Software de Gestión de Taller</div>
 </div><script>
+window.setChecklistCompany = ruc => {
+  const companies = {
+    "20605407077": {
+      name: "GRUPO HIVERXA S.A.C.", ruc: "RUC: 20605407077",
+      activity1: "Servicio de Transporte de Personal",
+      activity2: "Alquiler de Vehículos, Servicios de mantenimiento, Reparación y venta de repuestos y accesorios en el rubro Automotriz y Maquinaria Pesada"
+    },
+    "10404845263": {
+      name: "HIDALGO HUAMANÍ LUIS ALBERTO", ruc: "RUC: 10404845263",
+      activity1: "Centro De Diagnóstico Y Reparación Automotriz",
+      activity2: "Laboratorio Common Rail | Alquiler De Vehículos"
+    }
+  };
+  const company = companies[ruc] || companies["20605407077"];
+  document.getElementById("company-name").textContent = company.name;
+  document.getElementById("company-ruc-label").textContent = company.ruc;
+  document.getElementById("company-activity-1").textContent = company.activity1;
+  document.getElementById("company-activity-2").textContent = company.activity2;
+};
 (function(){
+  const selectedRuc = "${defaultCompanyRuc}";
+  document.getElementById("company-ruc").value = selectedRuc;
+  setChecklistCompany(selectedRuc);
   const alignDamageOverlay = () => {
     const box = document.querySelector('.damage-box');
     const image = box?.querySelector('img');
