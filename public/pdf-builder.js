@@ -24,11 +24,17 @@ window.buildChecklistPdf = function (record) {
       const isDocuments = row.category === "DOCUMENTOS DEL VEHÍCULO";
       return `<tr class="category"><td>${esc(row.name)}</td><td>${isDocuments ? "SÍ" : "B"}</td><td>${isDocuments ? "NO" : "R"}</td><td>${isDocuments ? "" : "M"}</td></tr>`;
     }
-    const value = String(inventory[row.name] || "").trim();
-    const normalized = value.toLowerCase();
+    const normalizeInventoryKey = value => String(value || "")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().replace(/[^a-z0-9]/gi, "");
+    const inventoryKey = Object.keys(inventory).find(key => normalizeInventoryKey(key) === normalizeInventoryKey(row.name));
+    const value = String(inventoryKey ? inventory[inventoryKey] : inventory[row.name] || "").trim();
+    const normalized = normalizeInventoryKey(value);
     const isDocuments = row.category === "DOCUMENTOS DEL VEHÍCULO";
-    if (isDocuments) return `<tr><td>${esc(row.name)}</td><td>${normalized === "sí" || normalized === "si" || normalized === "bueno" ? "X" : ""}</td><td>${normalized === "no" || normalized === "malo" ? "X" : ""}</td><td></td></tr>`;
-    return `<tr><td>${esc(row.name)}</td><td>${normalized === "bueno" ? "X" : ""}</td><td>${normalized === "regular" ? "X" : ""}</td><td>${normalized === "malo" ? "X" : ""}</td></tr>`;
+    const isEquipment = row.category === "HERRAMIENTAS / EQUIPO";
+    if (isDocuments) return `<tr><td>${esc(row.name)}</td><td>${normalized === "si" || normalized === "bueno" ? "X" : ""}</td><td>${normalized === "no" || normalized === "malo" ? "X" : ""}</td><td></td></tr>`;
+    if (isEquipment) return `<tr><td>${esc(row.name)}</td><td>${normalized === "si" || normalized === "b" || normalized === "bueno" ? "X" : ""}</td><td></td><td>${normalized === "no" || normalized === "m" || normalized === "malo" ? "X" : ""}</td></tr>`;
+    return `<tr><td>${esc(row.name)}</td><td>${normalized === "b" || normalized === "bueno" ? "X" : ""}</td><td>${normalized === "r" || normalized === "regular" ? "X" : ""}</td><td>${normalized === "m" || normalized === "malo" ? "X" : ""}</td></tr>`;
   }).join("");
 
   const fluidNames = [["Combustible","Combustible"],["Aceite","Aceite"],["Refrigerante","Refrigerante"],["Liq. Freno","Freno"],["Hidrolina","Hidrolina"],["Limpia Parabrisa","Limpia Parabrisa"]];
