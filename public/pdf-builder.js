@@ -25,7 +25,7 @@ window.buildChecklistPdf = function (record) {
       const isEquipment = row.category === "HERRAMIENTAS / EQUIPO";
       const layoutClass = isDocuments ? " documents-category" : isEquipment ? " equipment-category" : "";
       return isDocuments || isEquipment
-        ? `<tr class="category${layoutClass}"><td>${esc(row.name)}</td><td>SÍ</td><td colspan="2">NO</td></tr>`
+        ? `<tr class="category${layoutClass}"><td>${esc(row.name)}</td><td>SÍ</td><td>NO</td><td></td></tr>`
         : `<tr class="category"><td>${esc(row.name)}</td><td>B</td><td>R</td><td>M</td></tr>`;
     }
     const normalizeInventoryKey = value => String(value || "")
@@ -36,8 +36,8 @@ window.buildChecklistPdf = function (record) {
     const normalized = normalizeInventoryKey(value);
     const isDocuments = row.category === "DOCUMENTOS DEL VEHÍCULO";
     const isEquipment = row.category === "HERRAMIENTAS / EQUIPO";
-    if (isDocuments) return `<tr class="documents-row"><td>${esc(row.name)}</td><td>${normalized === "si" || normalized === "bueno" ? "X" : ""}</td><td colspan="2">${normalized === "no" || normalized === "malo" ? "X" : ""}</td></tr>`;
-    if (isEquipment) return `<tr class="equipment-row"><td>${esc(row.name)}</td><td>${normalized === "si" || normalized === "b" || normalized === "bueno" ? "X" : ""}</td><td colspan="2">${normalized === "no" || normalized === "m" || normalized === "malo" ? "X" : ""}</td></tr>`;
+    if (isDocuments) return `<tr class="documents-row"><td>${esc(row.name)}</td><td>${normalized === "si" || normalized === "bueno" ? "X" : ""}</td><td>${normalized === "no" || normalized === "malo" ? "X" : ""}</td><td></td></tr>`;
+    if (isEquipment) return `<tr class="equipment-row"><td>${esc(row.name)}</td><td>${normalized === "si" || normalized === "b" || normalized === "bueno" ? "X" : ""}</td><td>${normalized === "no" || normalized === "m" || normalized === "malo" ? "X" : ""}</td><td></td></tr>`;
     return `<tr><td>${esc(row.name)}</td><td>${normalized === "b" || normalized === "bueno" ? "X" : ""}</td><td>${normalized === "r" || normalized === "regular" ? "X" : ""}</td><td>${normalized === "m" || normalized === "malo" ? "X" : ""}</td></tr>`;
   }).join("");
 
