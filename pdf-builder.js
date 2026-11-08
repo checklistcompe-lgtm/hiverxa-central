@@ -102,7 +102,15 @@ window.buildChecklistPdf = function (record) {
   const damageOverlay = (damagePaths || damageMarks)
     ? `<svg class="damage-overlay" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 246 131" preserveAspectRatio="none" aria-hidden="true">${damagePaths}${damageMarks}</svg>`
     : "";
-  const signature = record.signatureUrl ? `/api/drive-image?url=${encodeURIComponent(record.signatureUrl)}` : "";
+  let signature = String(record.signatureUrl || "").trim();
+  if (signature && /^data:image\//i.test(signature)) {
+    // La firma ya está incrustada como Data URL.
+  } else if (signature && !/^(https?:\/\/|\/)/i.test(signature)) {
+    signature = `data:image/png;base64,${signature.replace(/^base64,?/i, "")}`;
+  } else if (signature && /^https?:\/\//i.test(signature)) {
+    const apiBase = typeof API_BASE !== "undefined" ? API_BASE : "https://hiverxa-central.onrender.com";
+    signature = `${apiBase}/api/drive-image?url=${encodeURIComponent(signature)}`;
+  }
   const getNormalizedSheetValue = names => {
     const normalize = value => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toUpperCase();
     const accepted = names.map(normalize);
