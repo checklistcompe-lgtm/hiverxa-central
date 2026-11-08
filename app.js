@@ -55,7 +55,8 @@ async function loadSolpedRecords(checklists = []) {
   if (!response.ok) throw new Error((await response.json()).error || "No fue posible cargar SOLPED");
   const data = await response.json();
   return data.records.filter(row => row.CORRELATIVO).map((row, index) => {
-    const checklist = checklists.find(item => item.id === row.CORRELATIVO) || {};
+    const normalizedCorrelative = String(row.CORRELATIVO || "").trim().toUpperCase();
+    const checklist = checklists.find(item => String(item.id || "").trim().toUpperCase() === normalizedCorrelative) || {};
     return {
       id: row.CORRELATIVO,
       type: "solped",
@@ -63,9 +64,9 @@ async function loadSolpedRecords(checklists = []) {
       date: row["FECHA EMISION"] || row["FECHA ACTUALIZACION"] || checklist.date || "",
       issueDate: row["FECHA EMISION"] || "",
       updateDate: row["FECHA ACTUALIZACION"] || row["Columna 4"] || "",
-      technician: row["USUARIO"] || row["usuarioNombre"] || "",
+      technician: row["USUARIO"] || row["usuarioNombre"] || row["USUARIO NOMBRE"] || checklist.responsible || "",
       client: checklist.client || checklist.raw?.CLIENTE || "",
-      clientDni: checklist.raw?.["DNI/RUC"] || checklist.signerDni || "",
+      clientDni: checklist.raw?.["DNI/RUC"] || checklist.raw?.DNI || checklist.raw?.RUC || checklist.signerDni || "",
       plate: checklist.plate || checklist.raw?.PLACA || "",
       brand: checklist.brand || checklist.raw?.MARCA || "",
       model: checklist.model || checklist.raw?.MODELO || "",
