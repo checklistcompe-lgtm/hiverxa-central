@@ -1,6 +1,6 @@
 let records = [];
 let editingId = null;
-const API_BASE = window.HIVERXA_API_BASE || "";
+const API_BASE = window.HIVERXA_API_BASE || "https://hiverxa-central.onrender.com";
 
 function normalizeDate(value) {
   const match = String(value || "").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -50,6 +50,35 @@ function normalizeFirebaseDate(value) {
   return normalizeDate(text);
 }
 
+async function loadSolpedRecords(checklists = []) {
+  const response = await fetch(`${API_BASE}/api/sheets/SOLPED_DETALLES`);
+  if (!response.ok) throw new Error((await response.json()).error || "No fue posible cargar SOLPED");
+  const data = await response.json();
+  return data.records.filter(row => row.CORRELATIVO).map((row, index) => {
+    const checklist = checklists.find(item => item.id === row.CORRELATIVO) || {};
+    return {
+      id: row.CORRELATIVO,
+      type: "solped",
+      title: "Solicitud de pedido",
+      date: row["FECHA EMISION"] || row["FECHA ACTUALIZACION"] || checklist.date || "",
+      issueDate: row["FECHA EMISION"] || "",
+      updateDate: row["FECHA ACTUALIZACION"] || row["Columna 4"] || "",
+      technician: row["USUARIO"] || row["usuarioNombre"] || "",
+      client: checklist.client || checklist.raw?.CLIENTE || "",
+      clientDni: checklist.raw?.["DNI/RUC"] || checklist.signerDni || "",
+      plate: checklist.plate || checklist.raw?.PLACA || "",
+      brand: checklist.brand || checklist.raw?.MARCA || "",
+      model: checklist.model || checklist.raw?.MODELO || "",
+      km: checklist.km || checklist.raw?.KM || "",
+      services: row.SERVICIOS || "",
+      parts: row["REPUESTOS/INSUMOS"] || "",
+      status: "Completo",
+      raw: row,
+      checklist
+    };
+  }).sort((a, b) => String(b.id).localeCompare(String(a.id), "es", { numeric: true }));
+}
+
 async function loadChecklistRecords() {
   try {
     const response = await fetch(`${API_BASE}/api/sheets/Hoja%201`);
@@ -92,9 +121,12 @@ async function loadChecklistRecords() {
         return String(b.id).localeCompare(String(a.id), "es", { numeric: true });
       });
     let actas = [];
+    let solpeds = [];
     try { actas = await loadActaRecords(); }
     catch (actaError) { console.error("Error cargando actas", actaError); showToast(actaError.message); }
-    records = [...checklists, ...actas].sort((a, b) => {
+    try { solpeds = await loadSolpedRecords(checklists); }
+    catch (solpedError) { console.error("Error cargando SOLPED", solpedError); showToast(solpedError.message); }
+    records = [...checklists, ...solpeds, ...actas].sort((a, b) => {
       if (a.type === "acta" && b.type === "acta") {
         const aDate = new Date(a.raw?.fecha || a.date).getTime();
         const bDate = new Date(b.raw?.fecha || b.date).getTime();
@@ -103,7 +135,7 @@ async function loadChecklistRecords() {
       return String(b.id).localeCompare(String(a.id), "es", { numeric: true });
     });
     render();
-    showToast(`${checklists.length} checklists y ${actas.length} actas cargados`);
+    showToast(`${checklists.length} checklists, ${solpeds.length} SOLPED y ${actas.length} actas cargados`);
   } catch (error) {
     let actas = [];
     try { actas = await loadActaRecords(); }
@@ -168,10 +200,19 @@ window.addEventListener("resize", syncTableScroll);
 function render() {
   const visible = filteredRecords();
   const actaView = typeFilter.value === "acta";
-  document.getElementById("recordsHead").innerHTML = actaView
-    ? "<tr><th>Placa / Código</th><th>Fecha</th><th>Tipo de vehículo</th><th>Marca</th><th>Modelo</th><th>Propietario / Cliente</th><th>Tipo de mantenimiento</th><th>Usuario</th><th>DNI</th><th></th></tr>"
-    : '<tr><th>Documento</th><th>Fecha</th><th>Placa</th><th>Marca</th><th>Modelo</th><th>Año</th><th>Color</th><th>KM</th><th>Cliente</th><th>Usuario</th><th>DNI</th><th>Observaciones</th><th></th></tr>'; 
-  recordsBody.innerHTML = visible.map(record => actaView ? `
+  const solpedView = typeFilter.value === "solped";
+  document.getElementById("recordsHead").innerHTML = solpedView
+    ? "<tr><th>N° SOLPED</th><th>Correlativo checklist</th><th>Emisión</th><th>Actualización</th><th>Cliente</th><th>Placa</th><th>Marca</th><th>Modelo</th><th></th></tr>"
+    : actaView
+      ? "<tr><th>Placa / Código</th><th>Fecha</th><th>Tipo de vehículo</th><th>Marca</th><th>Modelo</th><th>Propietario / Cliente</th><th>Tipo de mantenimiento</th><th>Usuario</th><th>DNI</th><th></th></tr>"
+      : '<tr><th>Documento</th><th>Fecha</th><th>Placa</th><th>Marca</th><th>Modelo</th><th>Año</th><th>Color</th><th>KM</th><th>Cliente</th><th>Usuario</th><th>DNI</th><th>Observaciones</th><th></th></tr>'; 
+  recordsBody.innerHTML = visible.map(record => solpedView ? `
+    <tr>
+      <td class="document-cell"><strong>${escapeTableValue(record.id)}</strong></td>
+      <td>${escapeTableValue(record.id)}</td><td>${escapeTableValue(record.issueDate)}</td><td>${escapeTableValue(record.updateDate)}</td>
+      <td>${escapeTableValue(record.client)}</td><td>${escapeTableValue(record.plate)}</td><td>${escapeTableValue(record.brand)}</td><td>${escapeTableValue(record.model)}</td>
+      <td><button class="action-button pdf-action" data-pdf="${escapeTableValue(record.id)}">Vista previa / PDF</button></td>
+    </tr>` : actaView ? `
     <tr>
       <td class="document-cell"><strong>${escapeTableValue(record.plate)}</strong></td>
       <td>${escapeTableValue(formatDate(record.date))}</td>
@@ -229,8 +270,13 @@ function showToast(message) {
 }
 
 recordsBody.addEventListener("click", event => {
-  const button = event.target.closest("[data-edit]");
-  if (button) openEditor(button.dataset.edit);
+  const editButton = event.target.closest("[data-edit]");
+  if (editButton) openEditor(editButton.dataset.edit);
+  const pdfButton = event.target.closest("[data-pdf]");
+  if (pdfButton) {
+    const record = records.find(item => item.type === "solped" && item.id === pdfButton.dataset.pdf);
+    if (record) window.buildSolpedPdf(record);
+  }
 });
 [searchInput, typeFilter, statusFilter].forEach(control => control.addEventListener("input", render));
 
@@ -298,18 +344,18 @@ document.getElementById("pdfButton").addEventListener("click", () => {
   } catch (error) { console.error(error); showToast(`No se pudo generar el PDF: ${error.message}`); }
 });
 
-["checklists", "actas"].forEach(view => {
+["checklists", "solped", "actas"].forEach(view => {
   document.querySelector(`[data-view="${view}"]`).addEventListener("click", event => {
     document.querySelectorAll(".nav-item").forEach(item => item.classList.remove("active"));
     event.currentTarget.classList.add("active");
-    typeFilter.value = view === "checklists" ? "checklist" : "acta";
-    document.getElementById("pageTitle").textContent = view === "checklists" ? "Checklists" : "Actas de entrega";
+    typeFilter.value = view === "checklists" ? "checklist" : view === "solped" ? "solped" : "acta";
+    document.getElementById("pageTitle").textContent = view === "checklists" ? "Checklists" : view === "solped" ? "SOLPED" : "Actas de entrega";
     render();
   });
 });
 typeFilter.addEventListener("change", () => {
-  document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.dataset.view === (typeFilter.value === "acta" ? "actas" : "checklists")));
-  document.getElementById("pageTitle").textContent = typeFilter.value === "acta" ? "Actas de entrega" : "Checklists";
+  document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.dataset.view === (typeFilter.value === "acta" ? "actas" : typeFilter.value === "solped" ? "solped" : "checklists")));
+  document.getElementById("pageTitle").textContent = typeFilter.value === "acta" ? "Actas de entrega" : typeFilter.value === "solped" ? "SOLPED" : "Checklists";
 });
 
 document.getElementById("refreshButton").addEventListener("click", loadChecklistRecords);

@@ -218,6 +218,40 @@ window.setChecklistCompany = ruc => {
   preview.srcdoc = html;
 };
 
+window.buildSolpedPdf = function(record) {
+  const preview = document.getElementById("pdfPreviewFrame");
+  const esc = value => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#039;" })[ch]);
+  const parseLines = value => String(value || "")
+    .split(/\r?\n/)
+    .map(line => line.replace(/^[-•]\s*/, "").trim())
+    .filter(Boolean)
+    .map(line => {
+      const match = line.match(/^\(([^)]+)\)\s*(.*)$/);
+      return match ? { quantity: match[1], description: match[2] } : { quantity: "", description: line };
+    });
+  const parts = parseLines(record.parts);
+  const services = parseLines(record.services);
+  const blankRows = count => Array.from({ length: count }, (_, index) => index);
+  const partRows = [...parts, ...blankRows(Math.max(0, 20 - parts.length))].slice(0, 20);
+  const serviceRows = [...services, ...blankRows(Math.max(0, 10 - services.length))].slice(0, 10);
+  const rowsHtml = (rows, start = 0) => rows.map((item, index) => typeof item === "object" && item.description !== undefined
+    ? `<tr><td>${start + index + 1}</td><td>${esc(item.quantity)}</td><td>${esc(item.description)}</td><td></td><td></td></tr>`
+    : `<tr><td>${start + index + 1}</td><td></td><td></td><td></td><td></td></tr>`).join("");
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>SOLPED ${esc(record.id)}</title><style>
+  @page{size:A4 portrait;margin:0}*{box-sizing:border-box;-webkit-print-color-adjust:exact}body{margin:0;background:#ddd;color:#111;font-family:Arial;font-size:9px}.toolbar{position:fixed;right:12px;top:12px;z-index:10}.toolbar button{border:0;border-radius:5px;padding:9px 13px;font-weight:bold;cursor:pointer}.print{background:#1769e0;color:#fff}.close{background:#263244;color:#fff;margin-left:5px}.page{width:210mm;height:297mm;background:#fff;margin:auto;padding:10mm 12mm 8mm;position:relative;overflow:hidden}.head{display:grid;grid-template-columns:1fr 40mm;align-items:start}.title{font-size:23px;font-weight:bold;margin-top:2mm}.dates{font-size:8px;line-height:1.8;margin-top:2mm}.solped-box{border:1.2px solid #111;text-align:center;padding:5px 4px}.solped-box small{color:#d62828;font-weight:bold}.solped-box strong{display:block;color:#d62828;font-size:16px;margin-top:2px}.section{border-top:1px solid #ddd;padding-top:3mm;margin-top:4mm}.section h2{font-size:8.5px;margin:0 0 4mm}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8mm}.vehicle-grid{grid-template-columns:repeat(4,1fr)}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8.5px}th,td{border:1px solid #333;height:18px;padding:2px 5px}th{background:#eef1f5;font-size:8px}td:nth-child(1){width:9%;text-align:center}td:nth-child(2){width:13%;text-align:center}td:nth-child(4){width:16%}td:nth-child(5){width:13%}.services td{height:18px}.services tbody tr{height:18px}.footer{position:absolute;bottom:5mm;left:12mm;font-size:7px;color:#777}@media print{body{background:#fff}.toolbar{display:none}.page{margin:0}}
+  </style></head><body><div class="toolbar"><button class="print" onclick="window.print()">Imprimir / Guardar PDF</button><button class="close" onclick="parent.document.getElementById('pdfPreviewDialog').close()">Cerrar</button></div><main class="page">
+  <header class="head"><div><div class="title">SOLICITUD DE PEDIDO</div><div class="dates">FECHA EMISIÓN: ${esc(record.issueDate)}<br>FECHA MODIFICACIÓN: ${esc(record.updateDate)}<br>TÉCNICO(S): ${esc(record.technician)}</div></div><div class="solped-box"><small>N° DE SOLPED</small><strong>${esc(record.id)}</strong></div></header>
+  <section class="section"><h2>DATOS DEL CLIENTE</h2><div class="grid"><div><b>CLIENTE:</b> ${esc(record.client)}</div><div><b>DNI/RUC:</b> ${esc(record.clientDni)}</div></div></section>
+  <section class="section"><h2>DATOS DEL VEHÍCULO</h2><div class="grid vehicle-grid"><div><b>PLACA:</b> ${esc(record.plate)}</div><div><b>MARCA:</b> ${esc(record.brand)}</div><div><b>MODELO:</b> ${esc(record.model)}</div><div><b>KM:</b> ${esc(record.km)}</div></div></section>
+  <section class="section"><h2>1. REPUESTOS E INSUMOS REQUERIDOS</h2><table><thead><tr><th>ÍTEM</th><th>CANT.</th><th>DESCRIPCIÓN</th><th>P. UNIT</th><th>TOTAL</th></tr></thead><tbody>${rowsHtml(partRows)}</tbody></table></section>
+  <section class="section"><h2>2. TRABAJOS A REALIZAR (SERVICIOS)</h2><table class="services"><thead><tr><th>ÍTEM</th><th>CANT.</th><th>DESCRIPCIÓN</th><th>P. UNIT</th><th>TOTAL</th></tr></thead><tbody>${rowsHtml(serviceRows)}</tbody></table></section>
+  <div class="footer">Documento generado desde la Central HIVERXA</div></main></body></html>`;
+  preview.srcdoc = html;
+  const dialog = document.getElementById("pdfPreviewDialog");
+  document.body.classList.add("preview-open");
+  if (!dialog.open) dialog.showModal();
+};
+
 window.buildActaPdf = function(record) {
   const esc = value => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#039;" })[ch]);
   const raw = record.raw || {};
